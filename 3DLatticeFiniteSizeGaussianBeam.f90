@@ -98,7 +98,7 @@ do i=1,Ntot
      testikxy=dist2xy(r(i,:), r(k,:))
 
 !      if(testik.le.Cutoff) then
-     prodJz=prodJz*Cos(t*pot(testik,testikxy, V0, rc) ) 
+     prodJz=prodJz*Cos(t*0.5d0*pot(testik,testikxy, V0, rc) ) 
 !      end if
 
     end do 
@@ -129,18 +129,18 @@ do i=1,Ntot
             testjkxy=dist2xy(r(j,:), r(k,:))
 !         if((testik .le.Cutoff)) then  
 ! .and. (testij.le.Cutoff)
-        prodJxJy=prodJxJy*Cos(t*pot(testikxy,testik, V0, rc)) 
+        prodJxJy=prodJxJy*Cos(t*0.5d0*pot(testikxy,testik, V0, rc)) 
 !         end if
 
 !         if((testik.le.Cutoff).and. (testjk.le.Cutoff)) then  
-        prodJx21=prodJx21*Cos(t*( pot(testikxy,testik, V0, rc) -pot(testjkxy,testjk, V0, rc)  )  )
-        prodJx22=prodJx22*Cos(t*( pot(testikxy, testik,V0, rc) +pot(testjkxy,testjk, V0, rc)  )  )
+        prodJx21=prodJx21*Cos(t*0.5d0*( pot(testikxy,testik, V0, rc) -pot(testjkxy,testjk, V0, rc)  )  )
+        prodJx22=prodJx22*Cos(t*0.5d0*( pot(testikxy, testik,V0, rc) +pot(testjkxy,testjk, V0, rc)  )  )
 !         end if
 
 
       end do 
 !    if(testij.le.Cutoff) then  
-   prodJxJy=prodJxJy*Sin(t*pot(dist2xy(r(i,:), r(j,:)),distance(r(i,:), r(j,:)), V0, rc)  )   
+   prodJxJy=prodJxJy*Sin(t*0.5d0*pot(dist2xy(r(i,:), r(j,:)),distance(r(i,:), r(j,:)), V0, rc)  )   
 !    end if 
 
 
@@ -427,8 +427,8 @@ dt=0.000001
 !fuer n=m=50
 
 ! 
-x1=0.00000001
-x2=0.0000088
+x1=0.0000001
+x2=0.0000259
 
 t=rtbis(x1,x2, Ntot,  V0,rc,r) 
 results=xi(t, Ntot, V0,rc,r)

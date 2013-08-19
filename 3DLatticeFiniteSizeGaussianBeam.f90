@@ -91,18 +91,18 @@ sumJx2=(0.d0,0.d0)
 Cutoff= 15*rc
 do i=1,Ntot
 
-  prodJz=(1.d0, 0.d0)    
+  prodJz=(0.d0, 0.d0)    
     do k=1,Ntot
      if(k==i ) cycle
      testik=distance(r(i,:), r(k,:))
      testikxy=dist2xy(r(i,:), r(k,:))
 
-!      if(testik.le.Cutoff) then
-     prodJz=prodJz*Cos(t*0.5d0*pot(testik,testikxy, V0, rc) ) 
-!      end if
+
+     prodJz=prodJz+pot(testik,testikxy, V0, rc)*pot(testik,testikxy, V0, rc)  
+
 
     end do 
-
+    prodJz=Exp(-prodJz*t*t/8.d0)
     sumJz=sumJz+prodJz
 enddo
 
@@ -115,9 +115,9 @@ do i=1,Ntot
 
  do j=i+1, Ntot
     testij=distance(r(i,:), r(j,:))
-   prodJxJy=(1.d0, 0.d0)
-   prodJx21=(1.d0, 0.d0)
-   prodJx22=(1.d0, 0.d0)
+   prodJxJy=(0.d0, 0.d0)
+   prodJx21=(0.d0, 0.d0)
+   prodJx22=(0.d0, 0.d0)
       do k=1,Ntot
 !         if (((r(k,1)==r(i,1)) .and. (r(k,2)==r(i,2))) .OR. ((r(k,1)==r(j,1)) .and. (r(k,2)==r(j,2)))) cycle
           if (k==i) cycle
@@ -127,25 +127,24 @@ do i=1,Ntot
             testikxy=dist2xy(r(i,:), r(k,:))
             testjk=distance(r(j,:), r(k,:))
             testjkxy=dist2xy(r(j,:), r(k,:))
-!         if((testik .le.Cutoff)) then  
-! .and. (testij.le.Cutoff)
-        prodJxJy=prodJxJy*Cos(t*0.5d0*pot(testikxy,testik, V0, rc)) 
-!         end if
 
-!         if((testik.le.Cutoff).and. (testjk.le.Cutoff)) then  
-        prodJx21=prodJx21*Cos(t*0.5d0*( pot(testikxy,testik, V0, rc) -pot(testjkxy,testjk, V0, rc)  )  )
-        prodJx22=prodJx22*Cos(t*0.5d0*( pot(testikxy, testik,V0, rc) +pot(testjkxy,testjk, V0, rc)  )  )
-!         end if
+
+        prodJxJy=prodJxJy+pot(testikxy,testik, V0, rc)*pot(testikxy,testik, V0, rc) 
+
+
+        prodJx21=prodJx21+pot(testikxy,testik, V0, rc)*pot(testikxy,testik, V0, rc)+pot(testjkxy,testjk, V0, rc)*pot(testjkxy,testjk, V0, rc)      
+        prodJx22=prodJx22+pot(testikxy,testik, V0, rc)*pot(testjkxy,testjk, V0, rc)
+
 
 
       end do 
-!    if(testij.le.Cutoff) then  
-   prodJxJy=prodJxJy*Sin(t*0.5d0*pot(dist2xy(r(i,:), r(j,:)),distance(r(i,:), r(j,:)), V0, rc)  )   
-!    end if 
+   prodJx21=2.d0*sinh(0.25d0*t*t*prodJx22)*Exp(-t*t/8.d0*prodJx21)
+   prodJxJy=Exp(-t*t/8.d0*prodJxJy)*Sin(t*0.5d0*pot(dist2xy(r(i,:), r(j,:)),distance(r(i,:), r(j,:)), V0, rc)  )   
+
 
 
 sumJxJy=sumJxJy+prodJxJy
-sumJx2=sumJx2+prodJx21-prodJx22
+sumJx2=sumJx2+prodJx21
 
  end do
 end do
@@ -262,7 +261,7 @@ else
 rtbis=x2
 dx=x1-x2
 endif
-do  while (abs(fmid) .ge. 0.001)
+do  while (abs(fmid) .ge. 0.0001)
 dx=dx*0.5d0
 xmid=rtbis+dx
 fmid=xi_prime(xmid,Ntot, V0,rc,r)
@@ -406,11 +405,11 @@ do i=-(n-1)/2,(n-1)/2
   end do
 end do
 
-do i=-(Ntot-1)/2,(Ntot-1)/2
+! do i=-(Ntot-1)/2,(Ntot-1)/2
 
-write(*,*) i, r(i,:)
+! write(*,*) i, r(i,:)
 
-end do
+! end do
 
 ! write(10,'(a5,4X,F14.8,1X)') "erste", r(:,1)
 ! write(10,'(a6,4X,F14.8,1X)') "zweite", r(:,2)
@@ -427,8 +426,10 @@ dt=0.000001
 !fuer n=m=50
 
 ! 
-x1=0.0000001
-x2=0.0000259
+x1=0.000001
+x2=0.000017
+!0.00003
+
 
 t=rtbis(x1,x2, Ntot,  V0,rc,r) 
 results=xi(t, Ntot, V0,rc,r)

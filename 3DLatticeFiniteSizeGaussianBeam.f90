@@ -84,14 +84,14 @@ real*8                        :: temp , Cutoff
     end function pot
    end interface 
 
-sumJz=(0.d0,0.d0)
-sumJxJy=(0.d0,0.d0)
-sumJx2=(0.d0,0.d0)
+sumJz=0.d0
+sumJxJy=0.d0
+sumJx2=0.d0
 
 Cutoff= 15*rc
 do i=1,Ntot
 
-  prodJz=(0.d0, 0.d0)    
+  prodJz=0.d0    
     do k=1,Ntot
      if(k==i ) cycle
      testik=distance(r(i,:), r(k,:))
@@ -115,9 +115,9 @@ do i=1,Ntot
 
  do j=i+1, Ntot
     testij=distance(r(i,:), r(j,:))
-   prodJxJy=(0.d0, 0.d0)
-   prodJx21=(0.d0, 0.d0)
-   prodJx22=(0.d0, 0.d0)
+   prodJxJy=0.d0
+   prodJx21=0.d0
+   prodJx22=0.d0
       do k=1,Ntot
 !         if (((r(k,1)==r(i,1)) .and. (r(k,2)==r(i,2))) .OR. ((r(k,1)==r(j,1)) .and. (r(k,2)==r(j,2)))) cycle
           if (k==i) cycle
@@ -157,8 +157,8 @@ Jx2=0.25d0*sumJx2
 eps=Ntot*(Ntot*0.25d0+0.5d0*Jx2+0.5d0*JxJy)/(Jz*Jz)
 xiPi4=Ntot*(Ntot*0.25d0+0.5d0*Jx2+0.5d0*JxJy)/(Jz*Jz)
 
-temp=0
-test=2
+! temp=0
+! test=2
 
 do i=1,25000
    theta=i*0.5*pi/25000 
@@ -324,15 +324,16 @@ interface
 end interface
 
 integer                       :: i, j, k, l, time, zahl
-integer                       :: n,m, num_threads,status, timestep
+integer                       :: n,m, num_threads,status, timestep, temp
 real*8                        :: rc,x1,x2
 integer                       :: Ntot
 real*8                        :: sumJz, sumJxJy, sumJx2, prodJz, prodJxJy, prodJx21, prodJx22
 real*8, parameter             :: V0=1000, pi=acos(-1._8)
 real*8                        :: dt,t, theta, distance, dist2xy  ,testik, testij, testjk,testjkxy, testikxy
-real*8                        :: temp, step, temp1, temp2,  pot, Cutoff
+real*8                        :: step, temp1, temp2,  pot, Cutoff
 ! integer, parameter            :: max_time=30
 real*8, dimension(:,:), allocatable     :: r
+integer, dimension(:), allocatable      ::layer
 ! integer, dimension(100*100,2)     :: r
 ! real*8, dimension(10*10,2):: r
 real*8, dimension(2)          :: results
@@ -381,12 +382,14 @@ write(*,*)  "Ntot= ", n*n*n
 open( unit = 10, FILE = file_out, ACTION = "write", STATUS = "replace" )   ! opens output file for writing
 
 allocate( r(-(Ntot-1)/2:(Ntot-1)/2,3), stat = error )
+allocate( layer(n*n), stat = error )
 
  Cutoff=15*rc
 
 ! Save positions in the lattice
 
 r=0.d0
+temp=1
 do i=-(n-1)/2,(n-1)/2
   do j=-(n-1)/2,(n-1)/2
     do k=-(n-1)/2,(n-1)/2
@@ -399,17 +402,22 @@ do i=-(n-1)/2,(n-1)/2
          r(zahl,3)=k*1.d0
 
 
+           if (k==0) then
+             layer(temp)=zahl
+             temp=temp+1
+           end if
+
 ! write(10,'(I3,4X,2(F14.8,1X))') k, r(k,:)
 
    end do
   end do
 end do
 
-! do i=-(Ntot-1)/2,(Ntot-1)/2
+do i=1,n*n
 
-! write(*,*) i, r(i,:)
+write(*,*) i, r(layer(i),:)
 
-! end do
+end do
 
 ! write(10,'(a5,4X,F14.8,1X)') "erste", r(:,1)
 ! write(10,'(a6,4X,F14.8,1X)') "zweite", r(:,2)
@@ -427,12 +435,12 @@ dt=0.000001
 
 ! 
 x1=0.000001
-x2=0.000017
+x2=0.000019
 !0.00003
 
 
-t=rtbis(x1,x2, Ntot,  V0,rc,r) 
-results=xi(t, Ntot, V0,rc,r)
+! t=rtbis(x1,x2, Ntot,  V0,rc,r) 
+! results=xi(t, Ntot, V0,rc,r)
 
   
 write(10,'(3(F14.8,1X),3X,I5,3X,F14.8,3X,F14.8,3X,F14.8,3X,F14.8,3X,F14.8,3X,F14.8 )') t*1963.5, results, Ntot, rc, 1.d0/(3**(1.d0/3.d0)*(0.5d0*Ntot)**(2.d0/3.d0) )
@@ -443,6 +451,7 @@ write(10,'(3(F14.8,1X),3X,I5,3X,F14.8,3X,F14.8,3X,F14.8,3X,F14.8,3X,F14.8,3X,F14
 
 
 deallocate( r )
+deallocate( layer )
 close( 10 )
 
 end program expectation_Values
